@@ -1,0 +1,7 @@
+Create an ansible playbook to create multiple users from a file. All the users should have a strong sudo password. Each user should only be allowed to connect to the server using passphrase protected private keys
+
+
+### playbook
+### variable file
+### register module-----register output to a variable
+### debug module ------ print variable value
