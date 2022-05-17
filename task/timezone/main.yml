@@ -1,0 +1,8 @@
+---
+- name: changing the timezone
+  hosts: testgrp
+  become: true
+  tasks:
+     - name: changing timezone using shell
+       shell:
+          cmd: timedatectl set-timezone Asia/Tokyo
