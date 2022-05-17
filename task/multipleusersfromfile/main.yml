@@ -1,0 +1,55 @@
+---
+- name: "Create multiple users from a file"
+  hosts: testgrp
+  become: true
+  vars_files:
+    - users.yml
+  tasks:
+
+    - name: "Adding Users"
+      user:
+        name: "{{ item.name }}"
+        create_home: yes
+        # password: "{{ 'password' | password_hash('sha512') }}"
+        #update_password: on_create
+        generate_ssh_key: yes
+        ssh_key_bits: 2048
+        ssh_key_file: .ssh/{{ item.name }}
+        ssh_key_passphrase: "admin123"
+      register: useradd_complete
+      with_items: "{{ users }}"
+    - debug:
+        var: useradd_complete
+
+    - name: "Rename the pub file to authorized_keys"
+      copy:
+        remote_src: true
+        src: "/home/{{ item.name }}/.ssh/{{ item.name }}.pub"
+        dest: "/home/{{ item.name }}/.ssh/authorized_keys"
+      with_items: "{{ users }}"
+
+    - name: "Rename the private-keyfile to .pem"
+      copy:
+        remote_src: true
+        src: "/home/{{ item.name }}/.ssh/{{ item.name }}"
+        dest: "/home/{{ item.name }}/.ssh/{{ item.name }}.pem"
+        mode: 0400
+      with_items: "{{ users }}"
+
+    - name: Remove old file -privatekey
+      file:
+        path: "/home/{{ item.name }}/.ssh/{{ item.name }}"
+        state: absent
+      with_items: "{{ users }}"
+
+    - name: Remove old file -publickey
+      file:
+        path: "/home/{{ item.name }}/.ssh/{{ item.name }}.pub"
+        state: absent
+      with_items: "{{ users }}"
+
+    - name: "Fetch file .pem file from remote"
+      fetch:
+        src: /home/{{ item.name }}/.ssh/{{ item.name }}.pem
+        dest: /home/ubuntu/
+      with_items: "{{ users }}"
